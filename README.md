@@ -1,14 +1,12 @@
 # Deutsch ADK Coach 🇩🇪🤖
 
-AI German B2 Language Coach powered by **Google Agent Development Kit (ADK)**, **Gemini 3.6 Multimodal**, and **Telegram Bot**.
-
-Personal project built with Google Cloud GEAR program developer credits.
+AI German B2 Language Coach powered by **Google Agent Development Kit (ADK)** / **Gemini 3.6 Multimodal**, and **Telegram Bot**.
 
 ---
 
 ## Architecture Overview
 
-* **Agent Engine:** Google Agent Development Kit (`google-adk`) / Gemini SDK with stateful conversation sub-agents.
+* **Agent Engine:** Stateful conversation agent built with the Google GenAI SDK (`google-genai`) and Gemini 3.6.
 * **Mobile Interface:** Telegram Bot (`python-telegram-bot`) supporting typed text and native `.ogg` voice notes.
 * **Audio & Multimodal:** Gemini native audio processing (`audio/ogg` Opus) for speaking feedback and pronunciation analysis.
 * **Telemetry & Storage:** Cloud Firestore (or local JSON) conforming strictly to `session_schema.json`.
@@ -116,7 +114,3 @@ This project is the evolution of a multi-stage B2 German learning framework:
 
 * See [CHANGELOG.md](CHANGELOG.md) for version release notes.
 * Licensed under the [MIT License](LICENSE).
-
-
-
-
