@@ -100,13 +100,31 @@ python -m src.main
 
 ---
 
-## Acknowledgements & Attribution
+## Project Evolution & Attribution
 
-This project is the evolution of a multi-stage B2 German learning framework:
+This project is the culmination of a 3-stage evolution in AI-assisted language learning:
 
-* **Foundational Pedagogy & Prompts ([v1.0.0](https://github.com/MohgaNabil/deutsch-lernpaket)):** Created by **Mohga Nabil**, defining the core B2 pedagogical design principles (bilingual 🇩🇪/🇬🇧 chat rhythm, 10 mistake categories, mandatory `B2-Umformulierung`, and original prompt concepts).
-* **Framework, Telemetry & Multi-Skill Expansion ([v2.0.0](https://github.com/kalaiguna/deutsch-lernpaket)):** Built by **Gunasekaran Chandrasekaran**, migrating to Notion MCP, creating 4 additional specialized skills (`schreib-skill`, `lektuere-skill`, `monatsrueckblick`, `grammatik-vertiefung`), introducing the machine-readable `session_schema.json` telemetry contract, and building the interactive progress dashboard.
-* **Agent Engine & Telegram Bot (`deutsch-adk-coach`):** Re-engineered by **Gunasekaran Chandrasekaran** into an autonomous, event-driven architecture powered by **Google Agent Development Kit (ADK)**, native **Gemini 3.6 Multimodal API** (direct Opus `.ogg` voice note processing), and **Telegram Bot** concurrency-locked session runner.
+### 1️⃣ Foundational Pedagogy & Prompts (v1.0.0)
+* **Author:** [Mohga Nabil](https://github.com/MohgaNabil/deutsch-lernpaket)
+* **Scope & Stack:** Created the original 3 prompt skills (`daily-german-practice`, `german-weekend-review`, `german-sunday-schreiben-und-hoeren`), tightly coupled to **Claude** and macOS-only **Apple Notes MCP**.
+* **Core Contribution:** Established core B2 pedagogical design rules (bilingual 🇩🇪/🇬🇧 chat rhythm, 10-category mistake taxonomy, mandatory `B2-Umformulierung`, and 1-2 questions per turn).
+
+### 2️⃣ Cross-Platform System, Notion Telemetry & 7-Skill Framework (v2.0.0)
+* **Author:** [Gunasekaran Chandrasekaran](https://github.com/kalaiguna/deutsch-lernpaket)
+* **Scope & Stack:** Re-architected for universal **Cross-Platform & Cross-Agent** support (Google Antigravity IDE, Claude Code, Copilot, Roo Code, OpenWebUI, n8n across Windows, Android, and macOS).
+* **Core Contribution:** 
+  * Replaced Apple Notes with **Notion MCP** and machine-readable `session_schema.json` telemetry.
+  * Expanded from 3 to **7 specialized skills** (`schreib-skill`, `lektuere-skill`, `monatsrueckblick`, `grammatik-vertiefung`).
+  * Built the interactive progress dashboard (heatmaps, streak tracking, vocabulary explorer, sticky micro-drills) and added dictation error detection.
+
+### 3️⃣ Autonomous Agent Engine & Telegram Bot (`deutsch-adk-coach`)
+* **Author:** Gunasekaran Chandrasekaran
+* **Scope & Stack:** Re-engineered from prompt-based MCP skills into an autonomous, event-driven agent architecture.
+* **Core Contribution:**
+  * Built with **Google Agent Development Kit (ADK)** and the **Gemini 3.6 Multimodal API** (`google-genai`).
+  * Native Telegram `.ogg` Opus voice note processing (direct audio comprehension, eliminating manual dictation/transcription).
+  * Asynchronous **Telegram Bot** with per-user concurrency locking (`asyncio.Lock`).
+  * Dual-destination telemetry (Cloud Firestore & local JSON) and automated Google Cloud Run / Scheduler triggers.
 
 ---
 
