@@ -99,3 +99,24 @@ python -m src.main
    * **Typed Text:** Send German text messages for grammar evaluation, error categorization, and `B2-Umformulierung` reformulations.
    * **Voice Notes:** Record native Telegram voice notes (`.ogg` Opus). The bot transcribes and analyzes spoken German directly via Gemini Multimodal.
 4. To stop the bot, press `Ctrl + C` in the terminal.
+
+---
+
+## Acknowledgements & Attribution
+
+This project is the evolution of a multi-stage B2 German learning framework:
+
+* **Foundational Pedagogy & Prompts ([v1.0.0](https://github.com/MohgaNabil/deutsch-lernpaket)):** Created by **Mohga Nabil**, defining the core B2 pedagogical design principles (bilingual 🇩🇪/🇬🇧 chat rhythm, 10 mistake categories, mandatory `B2-Umformulierung`, and original prompt concepts).
+* **Framework, Telemetry & Multi-Skill Expansion ([v2.0.0](https://github.com/kalaiguna/deutsch-lernpaket)):** Built by **Gunasekaran Chandrasekaran**, migrating to Notion MCP, creating 4 additional specialized skills (`schreib-skill`, `lektuere-skill`, `monatsrueckblick`, `grammatik-vertiefung`), introducing the machine-readable `session_schema.json` telemetry contract, and building the interactive progress dashboard.
+* **Agent Engine & Telegram Bot (`deutsch-adk-coach`):** Re-engineered by **Gunasekaran Chandrasekaran** into an autonomous, event-driven architecture powered by **Google Agent Development Kit (ADK)**, native **Gemini 3.6 Multimodal API** (direct Opus `.ogg` voice note processing), and **Telegram Bot** concurrency-locked session runner.
+
+---
+
+## License & History
+
+* See [CHANGELOG.md](CHANGELOG.md) for version release notes.
+* Licensed under the [MIT License](LICENSE).
+
+
+
+
