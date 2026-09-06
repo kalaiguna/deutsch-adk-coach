@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "deutsch-lernpaket/session-schema",
+  "title": "Deutsch Lernpaket Session Data",
+  "description": "JSON contract for session data saved as the first code block of every Notion session page. All platform adapters must produce output conforming to this schema.",
+  "type": "object",
+  "required": ["date", "theme", "name", "type"],
+  "properties": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Session date in YYYY-MM-DD format. Monatsrueckblick uses YYYY-MM-01."
+    },
+    "theme": {
+      "type": "string",
+      "description": "Topic or task type in German. Prefix with 💼 for professional sessions (Handelsblatt/Gründerszene/Heise sources; recruiter email / motivation / professional description writing tasks)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Full Notion page title. Format varies by session type — see type-specific notes below."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["conversation", "listening", "writing", "reading", "grammar", "review"],
+      "description": "Session type. Determines which stats fields are expected. Absence of this field (legacy) is treated as 'conversation' by the dashboard."
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Full URL of the article fetched. Required for type=reading only."
+    },
+    "nouns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["word", "meaning"],
+        "properties": {
+          "word":    { "type": "string" },
+          "plural":  { "type": "string" },
+          "meaning": { "type": "string" },
+          "example": { "type": "string" }
+        }
+      }
+    },
+    "adjectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["word", "meaning"],
+        "properties": {
+          "word":    { "type": "string" },
+          "meaning": { "type": "string" },
+          "example": { "type": "string" }
+        }
+      }
+    },
+    "verbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["infinitive", "meaning"],
+        "properties": {
+          "infinitive": { "type": "string" },
+          "presens":    { "type": "string" },
+          "perfekt":    { "type": "string" },
+          "meaning":    { "type": "string" },
+          "example":    { "type": "string" }
+        }
+      }
+    },
+    "idioms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["idiom", "meaning"],
+        "properties": {
+          "idiom":    { "type": "string" },
+          "literal":  { "type": "string" },
+          "meaning":  { "type": "string" },
+          "example":  { "type": "string" }
+        }
+      }
+    },
+    "mistakes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "wrong", "right"],
+        "properties": {
+          "num":         { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Artikel/Genus", "Kasus", "Wortstellung", "Verbform",
+              "Präposition", "Wortwahl", "Vokabular", "Rechtschreibung",
+              "Komposition", "Anglizismus/False Friend", "Sonstiges"
+            ]
+          },
+          "wrong":       { "type": "string" },
+          "right":       { "type": "string" },
+          "explanation": { "type": "string" }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Session statistics. Required keys vary by type — see notes. Include only keys relevant to the session type.",
+      "properties": {
+        "Anzahl Antworten":                        { "type": "number" },
+        "Wörter insgesamt":                        { "type": "number" },
+        "Durchschnittliche Wortzahl pro Antwort":  { "type": "number" },
+        "Komplexe Sätze (Nebensätze)":             { "type": "number" },
+        "dass-Sätze":                              { "type": "number" },
+        "weil-Sätze":                              { "type": "number" },
+        "wenn-Sätze":                              { "type": "number" },
+        "Konjunktiv II":                           { "type": "number" },
+        "Passiv":                                  { "type": "number" },
+        "Genitiv":                                 { "type": "number" },
+        "Eigene Fragen gestellt":                  { "type": "number" },
+        "Wiederverwendung alter Wörter":           { "type": "number" },
+        "Wiederverwendung alter Redewendungen":    { "type": "number" },
+        "Sitzungsdauer (Minuten)":                 { "type": "number" },
+        "Hörverstehen (richtig/gesamt)":           { "type": "string" },
+        "Leseverstehen (richtig/gesamt)":          { "type": "string" },
+        "Wörter im Artikel":                       { "type": "number" },
+        "Fehler gesamt":                           { "type": "number" },
+        "Register korrekt":                        { "type": "string" },
+        "Aufgabentyp":                             { "type": "string" },
+        "Thema":                                   { "type": "string" },
+        "Lückentext richtig":                      { "type": "string" },
+        "Umformung richtig":                       { "type": "string" },
+        "Freie Sätze":                             { "type": "number" },
+        "Sitzungen gesamt":                        { "type": "number" },
+        "Konversation":                            { "type": "number" },
+        "Hören":                                   { "type": "number" },
+        "Quiz":                                    { "type": "number" },
+        "Schreiben":                               { "type": "number" },
+        "Lektüre":                                 { "type": "number" },
+        "Neue Vokabeln":                           { "type": "number" },
+        "Wiederverwendungsrate (%)":               { "type": "number" },
+        "Häufigste Fehlerkategorie":               { "type": "string" },
+        "Zweithäufigste Fehlerkategorie":          { "type": "string" },
+        "Dritthäufigste Fehlerkategorie":          { "type": "string" },
+        "Aktive Wochen":                           { "type": "number" },
+        "Themen gesamt":                           { "type": "number" }
+      }
+    }
+  },
+  "examples": [
+    {
+      "date": "2026-09-02",
+      "theme": "Urlaub und Reisen",
+      "name": "Deutsch B2 Konversation, 2026-09-02, Urlaub und Reisen",
+      "type": "conversation",
+      "nouns": [{"word": "der Urlaub", "plural": "die Urlaube", "meaning": "holiday", "example": "Ich fahre in den Urlaub."}],
+      "adjectives": [],
+      "verbs": [{"infinitive": "reisen", "presens": "reist", "perfekt": "ist gereist", "meaning": "to travel", "example": "Wir sind nach Italien gereist."}],
+      "idioms": [],
+      "mistakes": [{"num": "1", "category": "Kasus", "wrong": "Ich gehe mit meinen Freunde", "right": "Ich gehe mit meinen Freunden", "explanation": "Dativ Plural needs -n ending"}],
+      "stats": {"Anzahl Antworten": 12, "Wörter insgesamt": 280, "Sitzungsdauer (Minuten)": 30}
+    },
+    {
+      "date": "2026-09-07",
+      "theme": "💼 KI in der Industrie",
+      "name": "Deutsch B2 Lektüre, 2026-09-07, 💼 KI in der Industrie",
+      "type": "reading",
+      "source_url": "https://www.handelsblatt.com/example",
+      "nouns": [],
+      "adjectives": [],
+      "verbs": [],
+      "idioms": [],
+      "mistakes": [],
+      "stats": {"Leseverstehen (richtig/gesamt)": "5/6", "Wörter im Artikel": 420, "Sitzungsdauer (Minuten)": 20}
+    }
+  ],
+  "notes": {
+    "page_title_formats": {
+      "conversation": "Deutsch B2 Konversation, YYYY-MM-DD, Theme",
+      "listening":    "Deutsch B2 Übersetzung & Hören, YYYY-MM-DD, Theme",
+      "quiz":         "Deutsch B2 Quiz, YYYY-MM-DD",
+      "writing":      "Deutsch B2 Schreiben, YYYY-MM-DD, Task type",
+      "reading":      "Deutsch B2 Lektüre, YYYY-MM-DD, Topic",
+      "grammar":      "Deutsch B2 Grammatik, YYYY-MM-DD, Topic",
+      "review":       "Deutsch B2 Monatsrückblick, YYYY-MM, Month in German"
+    },
+    "dashboard_reads": "The dashboard reads nouns, adjectives, verbs, idioms, mistakes, and stats. Quiz pages (type not set in their JSON) are used only for heatmap dates.",
+    "professional_prefix": "Prefix theme with 💼 for Handelsblatt/Gründerszene/Heise articles and for schreib-skill types D/E/F (recruiter email, motivation paragraph, professional description)."
+  }
+}
