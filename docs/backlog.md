@@ -12,6 +12,7 @@
 | v1.3.0 | Grammar deep-dive + monthly report | `GrammarAgent` (12-topic rotation) + `MonatsrueckblickAgent` (aggregation) |
 | v1.4.0 | Exam preparation | `ExamPrepAgent` — telc B2 mock with /45 rubric and Trap Drill |
 | v2.0.0 | Real-world input (reading + listening) | `LektureAgent` + `HoerenAgent` — WebSearch + WebFetch tooling required |
+| v3.0.0 | Web companion — dashboard + real-time voice calls | lernpaket dashboard migrated to Vite/React/TS; Firestore live data; Gemini Live API Gespräch panel |
 
 ---
 
@@ -77,9 +78,41 @@
 
 ---
 
+## v3.0.0 — Web companion (dashboard + real-time voice calls)
+
+Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use; the web app adds a progress dashboard and a "call your coach" mode for desktop sessions.
+
+**Foundation:** The `deutsch-lernpaket` dashboard (`core/dashboard/dashboard.html`) is a production-quality vanilla HTML/CSS/JS + Chart.js app whose session data model already matches adk-coach Firestore sessions exactly. v3.0 migrates it to a Vite + React + TypeScript project, wires it to live Firestore data, and adds a `Gespräch` call panel as a new nav section.
+
+**Requires:** Gemini Live API · Vite + React + TypeScript · Firebase Hosting or Cloud Run static · Cloud Functions (ephemeral token endpoint)
+
+### Dashboard migration (carried over from lernpaket)
+
+- Port existing panels to React components: KPI tiles, GitHub-style activity heatmap, vocab explorer (search / sort / stale-word highlighting / gender drill modal), session log with drill-down, B2 cheatsheet (Grammatik / Schreiben / Sprechen / Prüfung tabs)
+- Replace static `SNAPSHOT_SESSIONS` JS constant with live Firestore SDK reads — no more manual snapshot regeneration
+- Nav: `Übersicht` · `Vokabular` · `Grammatik` · `Sitzungen` · `Spickzettel` · **`Gespräch`** (new)
+
+### Gespräch panel (new)
+
+- Mic button + call status indicator (idle / connecting / live / ended)
+- `getUserMedia` → `AudioWorklet` → 16kHz PCM → WebSocket → Gemini Live API
+- 24kHz PCM from Gemini → `AudioContext` → speakers
+- Live transcript panel alongside call
+- Real-time mistake ticker — categories flagged as they are detected mid-call
+- Fehler-Rewind: pre-call Firestore query surfaces persistent mistake categories; coach weights live prompts accordingly
+- Adaptive pacing: coach slows down on request, pauses naturally while formulating responses
+- No in-call text corrections; spoken B2-Umformulierung delivered after each learner turn
+- End-of-call spoken summary + B2-Umformulierung replay panel
+- Session saved to Firestore on hang-up (`type="conversation"`, same schema as Telegram)
+
+### Token endpoint (Cloud Functions — 1 route)
+
+- `POST /token` — exchanges `GEMINI_API_KEY` server-side for a short-lived ephemeral token returned to the browser; API key never exposed client-side
+
+---
+
 ## Out of scope
 
-- Dashboard / HTML progress report (lives in the separate deutsch-lernpaket skills; pulling HTML generation into the Telegram bot adds complexity for no UX gain)
 - Notion MCP integration (replaced by Firestore in this repo)
 - Dictation mode (covered adequately by the voice note path in `ConversationAgent`)
 - Structured writing coach (`/schreiben` + `SchreibAgent`) — `ConversationAgent` already handles writing tasks on request; a separate mode adds overhead without meaningful pedagogical improvement at this stage

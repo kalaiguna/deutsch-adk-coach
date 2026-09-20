@@ -35,6 +35,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `/lektuere` command + fortnightly Wednesday cron
 - `/hoeren` command + Sunday cron
 
+### Planned — v3.0.0
+- Migrate lernpaket dashboard to Vite + React + TypeScript; replace static snapshot with live Firestore SDK reads
+- Port existing panels: KPI tiles, activity heatmap, vocab explorer, session log, B2 cheatsheet
+- Add `Gespräch` panel: mic → AudioWorklet → 16kHz PCM → WebSocket → Gemini Live API; real-time transcript + mistake ticker
+- Fehler-Rewind carried into live call from Firestore history; adaptive pacing; spoken B2-Umformulierung
+- End-of-call summary; session saved to Firestore (same schema as Telegram)
+- Cloud Functions ephemeral token endpoint (keeps API key server-side)
+
 ---
 
 ## [1.0.0] — 2026-09-06
