@@ -1,0 +1,26 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: deutsch-adk-coach
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Sequential message handling per instance to prevent race conditions
+        autoscaling.knative.dev/maxScale: '1'
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 1
+      containers:
+      - image: gcr.io/PROJECT_ID/deutsch-adk-coach:latest
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: '1'
+        env:
+        - name: GCP_PROJECT_ID
+          value: "PROJECT_ID"
+        - name: USE_LOCAL_STORAGE
+          value: "false"
