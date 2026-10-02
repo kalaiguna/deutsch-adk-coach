@@ -37,7 +37,8 @@ def validate_and_save_session(session_data: dict, user_id: str = "default_user")
             # Firestore Cloud Persistence
             from google.cloud import firestore
             db = firestore.Client(project=config.GCP_PROJECT_ID)
-            doc_ref = db.collection("users").document(str(user_id)).collection("sessions").document(session_data["date"])
+            doc_id = f"{session_data['date']}_{session_data['type']}"
+            doc_ref = db.collection("users").document(str(user_id)).collection("sessions").document(doc_id)
             doc_ref.set(session_data)
             logger.info("Saved session to Firestore for user %s", user_id)
             return {"status": "success", "destination": "firestore", "id": doc_ref.id}

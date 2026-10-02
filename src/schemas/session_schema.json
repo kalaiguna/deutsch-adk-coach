@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "deutsch-lernpaket/session-schema",
-  "title": "Deutsch Lernpaket Session Data",
-  "description": "JSON contract for session data saved as the first code block of every Notion session page. All platform adapters must produce output conforming to this schema.",
+  "$id": "deutsch-adk-coach/session-schema",
+  "title": "Deutsch ADK Coach Session Data",
+  "description": "JSON contract for session telemetry persisted to Cloud Firestore (or local JSON in dev mode). All agent types must produce output conforming to this schema.",
   "type": "object",
   "required": ["date", "theme", "name", "type"],
   "properties": {
@@ -79,6 +79,11 @@
           "example":  { "type": "string" }
         }
       }
+    },
+    "vocab_review_misses": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Words the learner got wrong during vocab recall drills. Read by VocabRecallAgent to weight future drills."
     },
     "mistakes": {
       "type": "array",
