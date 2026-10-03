@@ -6,3 +6,11 @@ __pycache__/
 .DS_Store
 data/
 credentials.json
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+terraform/.build/
+*.tfstate
+*.tfstate.backup

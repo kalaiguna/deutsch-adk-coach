@@ -6,10 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [4.0.0] — 2026-10-03
+
+### Added
+- `terraform/` module — provisions all GCP infrastructure from scratch with a single `terraform apply`
+- `google_cloud_run_v2_service` — bot deployment with Secret Manager injection, `maxScale: 1`, `containerConcurrency: 1`
+- `google_cloudfunctions2_function` — token endpoint (gen2), source uploaded from GCS, unauthenticated public access
+- `google_firestore_database` — Firestore native database in the configured region
+- `google_cloud_scheduler_job` (×5) — all five session crons (Tue/Thu conversation, Fri quiz, Sun hoeren, 1st bericht, 10th grammatik)
+- `google_secret_manager_secret` — all four API keys stored as secrets; never in plaintext Cloud Run spec
+- `google_billing_budget` — monthly budget cap (default $20 USD) with email + Pub/Sub alerts at 50%, 90%, and 100%
+- `google_pubsub_topic` — budget alert topic for future programmatic subscribers (e.g. disabling paid commands on breach)
+- `google_monitoring_notification_channel` — email channel for budget alert delivery
+- `terraform.tfvars.example` — copy-and-fill template; actual `terraform.tfvars` is gitignored
+- `.gitignore` — Terraform state, lock file, build artifacts, and `terraform.tfvars` excluded
+- `docs/guide.md` §4 updated with Terraform-first deploy instructions
+
+---
+
 ## [3.0.0] — 2026-10-03
 
 ### Added
-- Vite 6 + React 18 + TypeScript web companion (`web/`)
+- Vite 8 + React 19 + TypeScript web companion (`web/`)
 - `ActivityHeatmap` component — GitHub-style calendar heatmap of session activity
 - `VocabExplorer` component — searchable, sortable vocabulary table with gender-drill modal for nouns
 - `SessionLog` component — session list with drill-down into mistakes and vocabulary

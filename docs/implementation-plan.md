@@ -42,6 +42,10 @@ Cross-check of what spec v1.0 describes vs. what currently exists in the codebas
 | 13 | `ws.onclose` uses a functional `setStatus` updater: `setStatus(prev => prev === "live" \|\| prev === "connecting" ? "ended" : prev)` | `status` is captured by closure at the time the WebSocket is created. When `onclose` fires, the closure value is stale ("connecting"). The functional updater receives the actual current state from React, so the guard condition works correctly. |
 | 14 | Cloud Function token endpoint (`functions/token_endpoint.py`) returns `{"token": GEMINI_API_KEY, "model": GEMINI_MODEL}` — never embeds the key in client-side JS | The Gemini Live API key must not appear in browser source or network requests the user can inspect. The browser calls `POST /token` and uses the returned value only for the WebSocket handshake. |
 | 15 | `test_token_endpoint.py` stubs `functions_framework` and `flask` via `sys.modules` before import | Neither package is in the project venv (they are injected by the Cloud Functions runtime). Stubbing them with `types.ModuleType` allows the module to be imported and tested locally without a GCP environment. |
+| 16 | All API keys stored in Secret Manager; injected into Cloud Run and Cloud Functions as env vars at runtime — never in the Terraform resource spec | Terraform state files can be read by anyone with state bucket access. Putting secrets in Secret Manager means the state file contains only a reference (secret ID + version), not the key value itself. |
+| 17 | `google_cloud_run_v2_service_iam_member` (not `google_cloud_run_service_iam_member`) used to expose the Cloud Functions gen2 token endpoint | Cloud Functions gen2 runs on Cloud Run v2 under the hood. The v1 IAM resource uses a `service` attribute; the v2 resource uses `name`. Using the wrong resource type causes `terraform apply` to fail. |
+| 18 | Firebase Hosting excluded from Terraform — managed via `firebase deploy` only | The Terraform Firebase Hosting provider is partial and requires `google-beta` with additional setup. The Firebase CLI handles it cleanly in one command; adding Terraform support adds friction without benefit. |
+| 19 | `google_billing_budget` `nanos` wrapped in `tonumber(floor(...))` | The GCP API requires `nanos` to be an integer. Terraform's arithmetic on a float variable produces a float; `floor()` truncates and `tonumber()` enforces the integer type before the API call. |
 
 ---
 
@@ -56,7 +60,8 @@ Cross-check of what spec v1.0 describes vs. what currently exists in the codebas
 | 4 | `phase/4-exam-prep` | v1.4.0 ✅ | `ExamPrepAgent` + `/pruefung` (on-demand, no cron) |
 | 5 | `phase/5-web-input` | v2.0.0 ✅ | `LektureAgent` + `HoerenAgent`, `web_search_tool`, `web_fetch_tool`, fortnightly Wed + Sunday crons |
 | 6 | `phase/6-web-companion` | v3.0.0 ✅ | Vite+React+TS web companion, dashboard panels, Gespräch (Gemini Live API), Cloud Function token endpoint |
-| 7 | `phase/7-tests-and-docs` | — ✅ | 42 pytest unit tests, README v3.0 update, backlog milestones marked, implementation plan extended |
+| 7 | `phase/7-tests-and-docs` | — ✅ | 42 pytest + 19 Vitest tests, all docs rewritten for v3.0, CHANGELOG complete |
+| 8 | `phase/8-terraform-infra` | v4.0.0 | Terraform module: Cloud Run, Cloud Functions, Firestore, Scheduler (×5), Secret Manager, Budget Alerts |
 
 ---
 
@@ -88,7 +93,7 @@ Exports: `validate_and_save_session`, `read_recent_sessions`
 class VocabRecallAgent:
     # Reads vocab_review_misses from last 14 days via read_recent_sessions()
     # Selects up to 12 words, runs SRS-style noun-article + verb-infinitive drill
-    # Saves type="grammar" session on /finish (no new schema fields needed)
+    # Saves type="vocab" session (no new schema fields needed)
 ```
 Exports: `VocabRecallAgent`
 
@@ -126,7 +131,7 @@ Uncomment Friday quiz cron (already present as comment).
 
 ### Phase 3
 
-**`src/agents/monatsrueckblick.py`**
+**`src/agents/monthly_report.py`**
 ```python
 class MonatsrueckblickAgent:
     # Reads all sessions from past 30 days via read_recent_sessions(days=30)
@@ -286,4 +291,4 @@ class HoerenAgent:
 
 ---
 
-_All decisions locked. Ready to implement._
+_Decisions locked through phase 8. Updated as each phase completes._
