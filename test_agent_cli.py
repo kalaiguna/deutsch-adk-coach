@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config
-from src.main import APP_NAME, conversation_runner, exam_prep_runner, grammar_runner, monthly_report_runner, quiz_runner, vocab_runner, session_service
+from src.main import APP_NAME, conversation_runner, exam_prep_runner, grammar_runner, hoeren_runner, lekture_runner, monthly_report_runner, quiz_runner, vocab_runner, session_service
 
 RUNNERS = {
     "conversation": conversation_runner,
@@ -16,6 +16,8 @@ RUNNERS = {
     "grammar": grammar_runner,
     "report": monthly_report_runner,
     "exam": exam_prep_runner,
+    "lekture": lekture_runner,
+    "hoeren": hoeren_runner,
 }
 
 USER_ID = "cli_tester"
@@ -49,6 +51,8 @@ def main():
     print("          /grammatik  switch to grammar session")
     print("          /bericht    generate monthly report")
     print("          /pruefung   telc B2 exam prep")
+    print("          /lektuere   reading session (real article)")
+    print("          /hoeren     listening session (DW/Easy German)")
     print("          /start      reset conversation session")
     print("          exit        quit")
     print()
@@ -108,6 +112,18 @@ def main():
                 session_id = new_session_id(mode)
                 print(f"[+] Switched to exam prep | Session: {session_id}")
                 user_input = "Show me the exam prep components and let me choose one."
+
+            elif user_input == "/lektuere":
+                mode = "lekture"
+                session_id = new_session_id(mode)
+                print(f"[+] Switched to reading session | Session: {session_id}")
+                user_input = "Find a current German news article and start the reading session."
+
+            elif user_input == "/hoeren":
+                mode = "hoeren"
+                session_id = new_session_id(mode)
+                print(f"[+] Switched to listening session | Session: {session_id}")
+                user_input = "Find a DW or Easy German episode and start the listening session."
 
             print("\n[Thinking...]\n")
             reply = asyncio.run(run_turn(mode, session_id, user_input))
