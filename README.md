@@ -2,38 +2,55 @@
 
 Autonomous German B2 language coach — Telegram + web, built towards Google ADK multi-agent orchestration.
 
-> **Active development.** Current code is the v1.0 genai SDK baseline (single `ConversationAgent`). From v1.1 onwards this repo rebuilds on Google ADK for multi-agent routing. Picked up from [deutsch-genai-coach](https://github.com/kalaiguna/deutsch-genai-coach) (frozen at v1.0).
+> **Active development.** Built on Google ADK 2.11.0 with 8 specialized agents and a Vite+React web companion. Picked up from [deutsch-genai-coach](https://github.com/kalaiguna/deutsch-genai-coach) (frozen at v1.0).
 
 ---
 
 ```
-You → Telegram (text / .ogg voice) → Bot → Gemini 3.6 Multimodal → ConversationAgent
-                                                      |
-                                               Firestore / local JSON
+You → Telegram (text / .ogg voice) → Bot → ADK Runner → Agent (mode-routed)
+                                                              |
+                                                       Firestore / local JSON
+
+You → Web (GespraechPanel) → Gemini Live API (WebSocket) → ConversationAgent
+                                                              |
+                                                        Firestore (on hang-up)
 ```
 
 ---
 
 ## Why deutsch-adk-coach?
 
-**Speak to improve, not to transcribe.** Earlier versions of this coach lived as prompt skills for Claude Code or Roo Code — the learner had to be at a laptop with an AI coding session open to have a practice session. This rewrite removes that constraint.
+Earlier versions of this coach lived as prompt skills for Claude Code or Roo Code — a practice session required an open IDE. This repo removes that dependency.
 
-- **Always available.** Runs on Cloud Run; send a message or voice note from anywhere, on any device, without opening an IDE.
-- **Voice-first.** Send a Telegram voice note and the coach hears it directly via Gemini Multimodal — no transcription step, no copy-paste.
-- **Persistent telemetry.** Every session is saved to Cloud Firestore in a machine-readable schema, enabling Fehler-Rewind (mistake-weighted quiz) and monthly progress reports as follow-on features.
-- **Multi-agent (planned).** From v1.1, Google ADK runner will orchestrate routing between specialized agents — conversation, quiz, grammar, vocab recall, exam prep — without manual session switching logic.
-- **B2-grade feedback.** 11 mistake categories, mandatory B2-Umformulierung, one question per turn.
+- Runs on Cloud Run; accessible via Telegram from any device without an IDE.
+- Voice notes are processed directly by Gemini Multimodal — no separate transcription step.
+- Every session is saved to Cloud Firestore, which feeds the quiz (mistake-weighted), monthly report, and grammar topic selection in subsequent sessions.
+- Google ADK runner routes between 8 specialized agents, each with its own system prompt and tool set, based on the active Telegram command.
 
 ---
 
-## What it does today (v1.0)
+## What it does today (v3.0)
 
-- Conducts bilingual (DE/EN) B2 conversation sessions over text or voice
-- Categorizes grammar mistakes into 11 fixed categories per turn
-- Provides a B2-Umformulierung (B2 paraphrase) after every learner response
-- Saves session vocabulary, mistakes, and stats to Firestore on `/finish`
+**Telegram bot — 8 commands, 8 specialized agents:**
 
-→ Full roadmap (v1.1–v3.0): [docs/backlog.md](docs/backlog.md)
+| Command | Agent | What it does |
+|---|---|---|
+| `/start` | `ConversationAgent` | Bilingual B2 conversation, 11 mistake categories, B2-Umformulierung, voice notes via Gemini Multimodal |
+| `/vocab` | `VocabRecallAgent` | SRS-style noun-article + verb-infinitive drill from `vocab_review_misses` across last 14 days |
+| `/quiz` | `QuizAgent` | Fehler-Rewind (mistake-weighted questions) + Sticky Challenge micro-drill for persistent errors |
+| `/grammatik` | `GrammarAgent` | 12-topic monthly rotation, aligned to weakest Monatsrückblick category, 3 exercise types |
+| `/bericht` | `MonatsrueckblickAgent` | Aggregates 30-day sessions, tallies 11 categories, outputs 3 focus areas, saves `type="review"` |
+| `/pruefung` | `ExamPrepAgent` | telc B2 mock: Schreiben /45, Sprechen Teil 1/2+3, Trap Drill — practice-only, no save |
+| `/lektuere` | `LektureAgent` | Fetches real German article (tagesschau/Spiegel/Heise/Handelsblatt), pre-teaches 5 words, 6 comprehension question types |
+| `/hoeren` | `HoerenAgent` | Fetches DW/Easy German episode, pre-teaches 3 words, comprehension + sentence-by-sentence translation |
+
+**Web companion (`web/`):**
+
+- GitHub-style activity heatmap, vocab explorer, session log — all on live Firestore data
+- **Gespräch panel**: real-time voice call via Gemini Live API (WebSocket, 16kHz PCM in / 24kHz PCM out, AudioWorklet)
+- Cloud Function token endpoint (`functions/`) keeps the Gemini API key out of the browser
+
+→ Full roadmap history: [docs/backlog.md](docs/backlog.md)
 
 ---
 
@@ -66,26 +83,37 @@ Your voice note is downloaded from Telegram's servers, sent to the Gemini API fo
 
 ## Tech stack
 
-Python 3.11 · google-genai SDK · Gemini 3.6 Flash · python-telegram-bot · Cloud Firestore · Cloud Run · Cloud Scheduler · Google ADK (v1.1+)
+**Backend:** Python 3.11 · Google ADK 2.11.0 · Gemini 2.5 Flash · python-telegram-bot · Cloud Firestore · Cloud Run · Cloud Scheduler · Google Custom Search API
+
+**Web:** Vite 6 · React 18 · TypeScript · Firebase SDK · Gemini Live API (WebSocket) · AudioWorklet · Cloud Functions (Python)
 
 ---
 
 ## Extending deutsch-adk-coach
 
-- **Add a new agent** (v1.1+): subclass ADK `BaseAgent`, register in the ADK runner, wire a `CommandHandler` in `src/main.py`
-- **Enable web-fetch skills** (reading, listening): add `web_search_tool.py` and `web_fetch_tool.py` under `src/tools/` and register them in the relevant agent
+- **Add a new agent**: create an `LlmAgent` in `src/agents/`, add a runner to `RUNNERS` in `src/main.py`, wire a `CommandHandler` and a branch in `_voice_content`
+- **Add a new tool**: add it under `src/tools/`, import in the relevant agent's `tools=[]` list
+- **Add a web panel**: create a React component in `web/src/components/`, wire it into the nav in `App.tsx`
 
-→ Full roadmap: [docs/backlog.md](docs/backlog.md)
+→ Architecture decisions: [docs/implementation-plan.md](docs/implementation-plan.md)
 
 ---
 
 ## Running tests
 
 ```bash
-python test_agent_cli.py
+pip install pytest pytest-asyncio
+pytest
 ```
 
-Exercises the full `ConversationAgent` loop (text and audio paths) without a Telegram connection.
+42 unit tests across 4 modules:
+
+| Module | Tests | Coverage |
+|---|---|---|
+| `tests/test_firestore_tool.py` | 10 | `_extract_user_id`, `validate_and_save_session`, `read_recent_sessions` |
+| `tests/test_web_tools.py` | 12 | `_is_allowed_url`, `fetch_article_text`, `search_german_article` |
+| `tests/test_main_routing.py` | 15 | `_voice_content` (all 8 modes), session ID helpers, `is_authorized` |
+| `tests/test_token_endpoint.py` | 5 | Cloud Function token endpoint (POST/OPTIONS/GET, CORS, missing key) |
 
 ---
 
