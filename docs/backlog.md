@@ -13,6 +13,9 @@
 | v1.4.0 | Exam preparation | `ExamPrepAgent` — telc B2 mock with /45 rubric and Trap Drill |
 | v2.0.0 | Real-world input (reading + listening) | `LektureAgent` + `HoerenAgent` — WebSearch + WebFetch tooling required |
 | v3.0.0 | Web companion — dashboard + real-time voice calls | lernpaket dashboard migrated to Vite/React/TS; Firestore live data; Gemini Live API Gespräch panel |
+| v4.0.0 | Infrastructure as code | Terraform provisioning + GCP Budget Alerts; deploy from zero in one command |
+| v4.1.0 | Cost visibility | Billing API proxy Cloud Function; cost panel in web companion |
+| v3.1.0 | Writing coach with image evaluation | `SchreibAgent` — Gemini Vision evaluates handwritten/typed B2 emails against /45 rubric |
 
 ---
 
@@ -111,8 +114,75 @@ Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use
 
 ---
 
+## v4.0.0 — Infrastructure as code (candidate)
+
+**Value: High.** Without this, deploying to a fresh GCP project requires running ~15 ordered `gcloud` commands with no rollback. Terraform gives reproducible deploys, state tracking, and infra as version-controlled code.
+
+**Scope: `terraform/` directory covering:**
+
+| Resource | Terraform type |
+|---|---|
+| Cloud Run service (bot) | `google_cloud_run_v2_service` |
+| Cloud Function (token endpoint) | `google_cloudfunctions2_function` |
+| Firestore database | `google_firestore_database` |
+| Cloud Scheduler jobs (×5) | `google_cloud_scheduler_job` |
+| GCP Billing Budget + alerts | `google_billing_budget` |
+| IAM bindings for all services | `google_*_iam_member` |
+
+**Budget alert** (bundled here, low effort once Terraform is wired):
+- Monthly budget cap set via `terraform.tfvars` variable
+- Email alerts at 50% / 90% / 100% of budget threshold
+- Pub/Sub topic for programmatic subscribers (e.g. future bot-side enforcement)
+
+**Out of scope for this milestone:** Firebase Hosting (managed via `firebase deploy`, Terraform support is partial); bot-side budget enforcement (disabling paid commands when threshold is hit — separate item).
+
+---
+
+## v4.1.0 — Cost visibility panel (candidate)
+
+**Value: Medium.** GCP Billing API has a ~24-hour lag, so this shows yesterday's spend, not real-time. Still useful for monthly awareness.
+
+**What the panel shows:**
+- Current month estimated spend (total + breakdown by service: Gemini, Cloud Run, Cloud Functions, Custom Search API, Firestore, Scheduler)
+- Budget remaining (budget cap − current spend)
+- Month-over-month spend trend (bar chart, last 6 months)
+
+**Implementation:**
+- Cloud Function `GET /billing-summary` — proxies GCP Billing API (`billingaccounts.services.list`); the billing account credential stays server-side
+- New `CostPanel` React component in the web companion — calls `/billing-summary` on dashboard load
+- **Prerequisite:** `billing.accounts.get` IAM permission on the billing account (trivial for a personal GCP account; needs review for org accounts)
+- **Prerequisite:** v4.0.0 (Terraform) — budget cap value read from the same `terraform.tfvars` variable so panel and alerts stay in sync
+
+**User-settable budget:** via `terraform.tfvars` + `terraform apply`. Web UI for budget updates is out of scope — Terraform variable is simpler and keeps the change version-controlled.
+
+---
+
+## v3.1.0 — Writing coach with image evaluation (candidate)
+
+> Not yet committed to. Added to backlog for scoping before implementation.
+
+**Concept:** Generate a random telc B2 Schreiben task on demand, accept the learner's handwritten or typed response as a Telegram photo, and evaluate it from an examiner's perspective.
+
+**User flow:**
+1. Learner sends `/schreiben` → agent generates a random task prompt (formal email, complaint, request, etc.) drawn from past telc B2 exam formats
+2. Learner writes their response (on paper or digitally), photographs it, and sends the image back via Telegram
+3. Agent processes the image via Gemini Vision, extracts the text, evaluates it against the official /45 rubric (Inhalt 15, Aufbau 10, Grammatik 10, Wortschatz 10), and returns:
+   - A rubric breakdown with per-category scores and justification
+   - A corrected version of the full email at B2 level
+   - 2–3 specific improvement notes for the next attempt
+4. Session saved as `type="writing"` with rubric scores in `stats` and mistakes in `mistakes[]`
+
+**Technical requirements:**
+- Telegram photo handler (`MessageHandler(filters.PHOTO, ...)`) — downloads the image bytes, passes to Gemini Vision
+- `SchreibAgent` — `LlmAgent` with `SCHREIBEN_SYSTEM_PROMPT` and `validate_and_save_session` tool
+- `SCHREIBEN_SYSTEM_PROMPT` — task bank (10–15 prompts), vision-aware evaluation instructions, /45 rubric enforcement
+- No new tools needed — Gemini Vision handles image-to-text natively via the multimodal content API
+
+**Distinguishes from `ExamPrepAgent`:** `ExamPrepAgent` is text-only and does not save. `/schreiben` is photo-in, structured feedback out, and saves to history so the rubric scores are visible in the dashboard.
+
+---
+
 ## Out of scope
 
 - Notion MCP integration (replaced by Firestore in this repo)
 - Dictation mode (covered adequately by the voice note path in `ConversationAgent`)
-- Structured writing coach (`/schreiben` + `SchreibAgent`) — `ConversationAgent` already handles writing tasks on request; a separate mode adds overhead without meaningful pedagogical improvement at this stage
