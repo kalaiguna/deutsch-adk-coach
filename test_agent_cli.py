@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config
-from src.main import APP_NAME, conversation_runner, grammar_runner, monthly_report_runner, quiz_runner, vocab_runner, session_service
+from src.main import APP_NAME, conversation_runner, exam_prep_runner, grammar_runner, monthly_report_runner, quiz_runner, vocab_runner, session_service
 
 RUNNERS = {
     "conversation": conversation_runner,
@@ -15,6 +15,7 @@ RUNNERS = {
     "quiz": quiz_runner,
     "grammar": grammar_runner,
     "report": monthly_report_runner,
+    "exam": exam_prep_runner,
 }
 
 USER_ID = "cli_tester"
@@ -47,6 +48,7 @@ def main():
     print("          /quiz       switch to adaptive quiz")
     print("          /grammatik  switch to grammar session")
     print("          /bericht    generate monthly report")
+    print("          /pruefung   telc B2 exam prep")
     print("          /start      reset conversation session")
     print("          exit        quit")
     print()
@@ -100,6 +102,12 @@ def main():
                 session_id = new_session_id(mode)
                 print(f"[+] Generating monthly report | Session: {session_id}")
                 user_input = "Generate my monthly Monatsrückblick report now."
+
+            elif user_input == "/pruefung":
+                mode = "exam"
+                session_id = new_session_id(mode)
+                print(f"[+] Switched to exam prep | Session: {session_id}")
+                user_input = "Show me the exam prep components and let me choose one."
 
             print("\n[Thinking...]\n")
             reply = asyncio.run(run_turn(mode, session_id, user_input))
