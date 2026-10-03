@@ -7,9 +7,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config
-from src.main import APP_NAME, conversation_runner, quiz_runner, vocab_runner, session_service
+from src.main import APP_NAME, conversation_runner, grammar_runner, monthly_report_runner, quiz_runner, vocab_runner, session_service
 
-RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}
+RUNNERS = {
+    "conversation": conversation_runner,
+    "vocab": vocab_runner,
+    "quiz": quiz_runner,
+    "grammar": grammar_runner,
+    "report": monthly_report_runner,
+}
 
 USER_ID = "cli_tester"
 
@@ -37,10 +43,12 @@ def main():
     print("=" * 52)
     print("  Deutsch B2 ADK Coach — Local CLI Test Runner  ")
     print("=" * 52)
-    print("Commands: /vocab  switch to vocab drill")
-    print("          /quiz   switch to adaptive quiz")
-    print("          /start  reset conversation session")
-    print("          exit    quit")
+    print("Commands: /vocab      switch to vocab drill")
+    print("          /quiz       switch to adaptive quiz")
+    print("          /grammatik  switch to grammar session")
+    print("          /bericht    generate monthly report")
+    print("          /start      reset conversation session")
+    print("          exit        quit")
     print()
 
     if not config.GEMINI_API_KEY:
@@ -80,6 +88,18 @@ def main():
                 session_id = new_session_id(mode)
                 print(f"[+] Switched to adaptive quiz | Session: {session_id}")
                 user_input = "Start the adaptive quiz now."
+
+            elif user_input == "/grammatik":
+                mode = "grammar"
+                session_id = new_session_id(mode)
+                print(f"[+] Switched to grammar session | Session: {session_id}")
+                user_input = "Start the grammar session for this month's topic now."
+
+            elif user_input == "/bericht":
+                mode = "report"
+                session_id = new_session_id(mode)
+                print(f"[+] Generating monthly report | Session: {session_id}")
+                user_input = "Generate my monthly Monatsrückblick report now."
 
             print("\n[Thinking...]\n")
             reply = asyncio.run(run_turn(mode, session_id, user_input))
