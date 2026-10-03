@@ -15,6 +15,7 @@ from telegram.ext import (
 )
 from src import config
 from src.agents.conversation import conversation_agent
+from src.agents.quiz import quiz_agent
 from src.agents.vocab_recall import vocab_recall_agent
 
 logging.basicConfig(
@@ -38,8 +39,14 @@ vocab_runner = Runner(
     app_name=APP_NAME,
     auto_create_session=True,
 )
+quiz_runner = Runner(
+    agent=quiz_agent,
+    session_service=session_service,
+    app_name=APP_NAME,
+    auto_create_session=True,
+)
 
-RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner}
+RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}
 
 # --- Per-user state ---
 user_mode: dict[int, str] = {}          # "conversation" | "vocab"
@@ -131,7 +138,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💡 *You can type in German or send voice notes anytime!*\n\n"
         "🇩🇪 **Worüber möchtest du heute sprechen?**\n\n"
         "🇬🇧 What would you like to talk about today?\n\n"
-        "Commands: /vocab — vocabulary drill from recent sessions"
+        "Commands: /vocab — vocabulary drill | /quiz — adaptive quiz"
     )
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
@@ -158,6 +165,30 @@ async def vocab_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(reply)
     else:
         await update.message.reply_text("🇩🇪 Starten wir das Vokabeltraining!\n\n🇬🇧 Starting your vocab drill...")
+
+
+async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not is_authorized(user_id):
+        return
+
+    user_mode[user_id] = "quiz"
+    session_id = reset_session_id(user_id, "quiz")
+
+    content = types.Content(
+        role="user",
+        parts=[types.Part(text="Start the adaptive quiz now.")],
+    )
+
+    lock = get_or_create_lock(user_id)
+    async with lock:
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        reply = await run_agent(quiz_runner, user_id, session_id, content)
+
+    if reply:
+        await update.message.reply_text(reply)
+    else:
+        await update.message.reply_text("🎯 Starting your adaptive quiz...")
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -207,6 +238,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("vocab", vocab_command))
+    app.add_handler(CommandHandler("quiz", quiz_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
