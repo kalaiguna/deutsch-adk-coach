@@ -182,6 +182,47 @@ Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use
 
 ---
 
+## Dev tooling (not versioned features)
+
+### Google Cloud MCP servers + ADK MCP integration (candidate)
+
+**ADK MCP support — confirmed available in ADK 2.11.0:**
+
+ADK ships built-in MCP client support. The `MCPToolset` class (note: all-caps, not `McpToolset`) in `google.adk.tools.mcp_tool` lets an agent connect to any MCP server and dynamically load its tools — no custom wrapper needed. Requires the mcp extra:
+
+```bash
+pip install "google-adk[mcp]"
+```
+
+Once installed, an agent can connect via stdio (local subprocess) or SSE/HTTP (remote, e.g. Cloud Run):
+
+```python
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+my_agent = LlmAgent(
+    name="my_agent",
+    model=config.DEFAULT_MODEL,
+    instruction=MY_PROMPT,
+    tools=[MCPToolset(connection_params=...)],
+)
+```
+
+**When ADK MCPToolset applies to this project:**
+
+- **Not applicable** to the web companion or Cloud Functions — those are React + plain Python HTTP handlers, not ADK agents. The v4.1.0 cost panel Cloud Function should call the Billing API directly.
+- **Applicable** to a future Telegram bot command (e.g. `/kosten`) backed by an ADK agent that connects to `observability-mcp` to fetch spend data and answer conversationally: _"You've spent $4.20 this month, 68% on Gemini API."_ This would be a separate backlog item, not part of v4.1.0.
+
+**Two GCP MCP servers relevant to this project:**
+
+- **gcloud-mcp** (`googleapis/gcloud-mcp`) — Claude Code dev sessions only: check Cloud Run health, tail logs, update env vars, inspect Cloud Scheduler jobs without manual `gcloud` commands.
+- **observability-mcp** — Claude Code debugging: query Cloud Run and Cloud Functions logs directly. Also the MCP server a future `/kosten` ADK agent would connect to for billing metrics.
+
+Both are dev-workflow improvements (Claude Code MCP config, `.claude/settings.json`). Neither changes the app itself unless a `/kosten` agent is built.
+
+**ADK dev UI:** `adk web` ships with ADK and provides a local browser UI for inspecting agent runs and tool call events — useful without any MCP setup.
+
+---
+
 ## Out of scope
 
 - Notion MCP integration (replaced by Firestore in this repo)

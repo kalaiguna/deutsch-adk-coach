@@ -22,6 +22,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `.gitignore` — Terraform state, lock file, build artifacts, and `terraform.tfvars` excluded
 - `docs/guide.md` §4 updated with Terraform-first deploy instructions
 
+### Fixed
+- `/finish` Telegram command implemented — was referenced in all agent system prompts but silently dropped by `~filters.COMMAND`; now wired as a `CommandHandler` that forwards the signal to the active agent
+- Unknown commands (e.g. `/help`) now reply with the command list instead of being silently dropped
+- Empty agent replies in text and voice handlers now surface a fallback message instead of leaving the user with no response
+- Unhandled exceptions now reply to the user via `app.add_error_handler` instead of hanging silently
+- `DEFAULT_MODEL` corrected to `gemini-2.5-flash` (was `gemini-3.6-flash` in `src/config.py`)
+
 ---
 
 ## [3.0.0] — 2026-10-03
