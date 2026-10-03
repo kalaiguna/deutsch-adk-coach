@@ -15,8 +15,8 @@ USE_LOCAL_STORAGE = os.getenv("USE_LOCAL_STORAGE", "true").lower() == "true"
 ALLOWED_USERS_RAW = os.getenv("ALLOWED_TELEGRAM_USERS", "")
 ALLOWED_TELEGRAM_USERS = [int(x.strip()) for x in ALLOWED_USERS_RAW.split(",") if x.strip().isdigit()]
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
-PRO_MODEL = os.getenv("GEMINI_PRO_MODEL", "gemini-3.6-pro")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+PRO_MODEL = os.getenv("GEMINI_PRO_MODEL", "gemini-2.5-pro")
 
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY", "")
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX", "")

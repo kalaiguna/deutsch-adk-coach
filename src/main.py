@@ -204,7 +204,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💡 *You can type in German or send voice notes anytime!*\n\n"
         "🇩🇪 **Worüber möchtest du heute sprechen?**\n\n"
         "🇬🇧 What would you like to talk about today?\n\n"
-        "Commands: /vocab — vocab drill | /quiz — adaptive quiz | /grammatik — grammar | /bericht — monthly report | /pruefung — exam prep | /lektuere — reading | /hoeren — listening"
+        "Commands: /vocab — vocab drill | /quiz — adaptive quiz | /grammatik — grammar | /bericht — monthly report | /pruefung — exam prep | /lektuere — reading | /hoeren — listening | /finish — end & save session"
     )
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
@@ -377,6 +377,27 @@ async def bericht_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("📊 Generating your monthly report...")
 
 
+async def finish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not is_authorized(user_id):
+        return
+
+    runner, session_id = _get_runner_and_session(user_id)
+    content = types.Content(role="user", parts=[types.Part(text="/finish")])
+
+    lock = get_or_create_lock(user_id)
+    async with lock:
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        reply = await run_agent(runner, user_id, session_id, content)
+
+    await update.message.reply_text(reply or "✅ Session ended.")
+
+
+async def handle_unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    commands = "/start · /vocab · /quiz · /grammatik · /bericht · /pruefung · /lektuere · /hoeren · /finish"
+    await update.message.reply_text(f"Unknown command. Available commands:\n{commands}")
+
+
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not is_authorized(user_id):
@@ -390,8 +411,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
         reply = await run_agent(runner, user_id, session_id, content)
 
-    if reply:
-        await update.message.reply_text(reply)
+    await update.message.reply_text(reply or "⚠️ No response from the coach. Please try again.")
 
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -411,8 +431,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="record_voice")
         reply = await run_agent(runner, user_id, session_id, content)
 
-    if reply:
-        await update.message.reply_text(reply)
+    await update.message.reply_text(reply or "⚠️ No response from the coach. Please try again.")
+
+
+async def handle_error(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logger.error("Unhandled exception in handler", exc_info=context.error)
+    if isinstance(update, Update) and update.message:
+        await update.message.reply_text("⚠️ Something went wrong. Please try again.")
 
 
 def main():
@@ -430,8 +455,11 @@ def main():
     app.add_handler(CommandHandler("pruefung", pruefung_command))
     app.add_handler(CommandHandler("lektuere", lekture_command))
     app.add_handler(CommandHandler("hoeren", hoeren_command))
+    app.add_handler(CommandHandler("finish", finish_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    app.add_handler(MessageHandler(filters.COMMAND, handle_unknown_command))
+    app.add_error_handler(handle_error)
 
     logger.info("Deutsch ADK Coach started.")
     app.run_polling()

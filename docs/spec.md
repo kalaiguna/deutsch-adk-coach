@@ -311,14 +311,17 @@ dw.com  easygerman.org  zdf.de  sz.de
 
 ## 10. Deployment
 
-See [docs/guide.md — For DevOps](guide.md#4-for-devops) for step-by-step commands.
+All GCP infrastructure is provisioned by `terraform/`. See [docs/guide.md — For DevOps](guide.md#4-for-devops) for full commands.
 
-| Component | Platform | Entry point |
+| Component | Platform | Managed by |
 |---|---|---|
-| Bot | Cloud Run | `python -m src.main` |
-| Token endpoint | Cloud Functions gen2 | `functions/token_endpoint.py::token_endpoint` |
-| Web companion | Firebase Hosting | `npm run build` → `firebase deploy --only hosting` |
-| Cron triggers | Cloud Scheduler | 5 jobs posting to Cloud Run `/trigger/*` routes |
+| Bot | Cloud Run (`maxScale: 1`, `containerConcurrency: 1`) | Terraform |
+| Token endpoint | Cloud Functions gen2 | Terraform |
+| Firestore database | Cloud Firestore native | Terraform |
+| Cron triggers | Cloud Scheduler (5 jobs) | Terraform |
+| API keys | Secret Manager | Terraform |
+| Budget alerts | GCP Billing Budgets + Pub/Sub | Terraform |
+| Web companion | Firebase Hosting | `firebase deploy` (outside Terraform) |
 
 ---
 
@@ -328,6 +331,6 @@ When implementing features in this repo:
 
 - **New agents** use `LlmAgent` from `google.adk.agents`. Export the agent instance; create a `Runner` for it in `src/main.py`; add it to `RUNNERS` under a new mode key.
 - **New commands** require: (1) entry in `RUNNERS`, (2) branch in `_voice_content` for the new mode, (3) `CommandHandler` in `src/main.py`, (4) entry in `deploy/scheduler.yaml` if cron-driven.
-- **New HTTP tools** must validate the request URL hostname against `_ALLOWED_DOMAINS` from `web_fetch_tool.py` before any `urllib.request.urlopen` call. This applies to every tool that accepts a URL argument from the model.
+- **New HTTP tools** must validate the request URL hostname against `_ALLOWED_DOMAINS` from `web_search_tool.py` before any `urllib.request.urlopen` call. This applies to every tool that accepts a URL argument from the model.
 - **Session saves** must use a `type` value from the enum in `src/schemas/session_schema.json`. Do not invent new type strings.
 - **Tests** go in `tests/`. `asyncio_mode = auto` in `pytest.ini` means async test functions do not need `@pytest.mark.asyncio`.

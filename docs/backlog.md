@@ -15,7 +15,7 @@
 | v3.0.0 | Web companion — dashboard + real-time voice calls | lernpaket dashboard migrated to Vite/React/TS; Firestore live data; Gemini Live API Gespräch panel |
 | v4.0.0 | Infrastructure as code | Terraform provisioning + GCP Budget Alerts; deploy from zero in one command |
 | v4.1.0 | Cost visibility | Billing API proxy Cloud Function; cost panel in web companion |
-| v3.1.0 | Writing coach with image evaluation | `SchreibAgent` — Gemini Vision evaluates handwritten/typed B2 emails against /45 rubric |
+| v4.2.0 | Writing coach with image evaluation | `SchreibAgent` — Gemini Vision evaluates handwritten/typed B2 emails against /45 rubric |
 
 ---
 
@@ -114,7 +114,7 @@ Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use
 
 ---
 
-## v4.0.0 — Infrastructure as code (candidate)
+## v4.0.0 — Infrastructure as code
 
 **Value: High.** Without this, deploying to a fresh GCP project requires running ~15 ordered `gcloud` commands with no rollback. Terraform gives reproducible deploys, state tracking, and infra as version-controlled code.
 
@@ -157,7 +157,7 @@ Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use
 
 ---
 
-## v3.1.0 — Writing coach with image evaluation (candidate)
+## v4.2.0 — Writing coach with image evaluation (candidate)
 
 > Not yet committed to. Added to backlog for scoping before implementation.
 

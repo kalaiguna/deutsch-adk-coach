@@ -12,7 +12,7 @@ deutsch-adk-coach is a German B2 language coach on Telegram. Send it a text mess
 
 1. Open the bot in Telegram and send `/start` to begin a conversation session.
 2. Write or speak in German — the coach responds with a correction and a question.
-3. Send `/finish` when you are done to save your vocabulary and mistakes.
+3. Send `/finish` when you are done. The coach saves your vocabulary and mistakes and shows a session summary.
 
 ### Commands
 
@@ -84,7 +84,7 @@ sequenceDiagram
 
 ### Finishing a session
 
-Send `/finish` at any point. The coach summarises:
+Send `/finish` at any point. The coach saves the session and summarises:
 
 - **Vocabulary** — nouns with article and plural, verbs with infinitive and Perfekt form, adjectives, idioms
 - **Mistakes** — category, wrong form, corrected form, brief explanation
@@ -153,7 +153,7 @@ If `ALLOWED_TELEGRAM_USERS` is set, only those Telegram user IDs can interact wi
 | AI model | Gemini 2.5 Flash (configurable via `GEMINI_MODEL`) |
 | Bot framework | `python-telegram-bot` 21+ (async, long-polling) |
 | Persistence | Cloud Firestore (production) or local JSON (development) |
-| Web framework | Vite 6 + React 18 + TypeScript |
+| Web framework | Vite 8 + React 19 + TypeScript |
 | Web persistence | Firebase JS SDK (live Firestore reads) |
 | Real-time voice | Gemini Live API over WebSocket, AudioWorklet |
 | Cloud Function | Python 3.11, `functions-framework` |
@@ -312,7 +312,7 @@ async for event in runner.run_async(
 ### How to add a new tool
 
 1. Create `src/tools/<tool_name>.py` with a plain Python function — ADK tools require no decorator.
-2. If the tool makes outbound HTTP requests, import `_ALLOWED_DOMAINS` from `web_fetch_tool.py` and validate the URL hostname before calling `urllib.request.urlopen`.
+2. If the tool makes outbound HTTP requests, import `_ALLOWED_DOMAINS` from `web_search_tool.py` and validate the URL hostname before calling `urllib.request.urlopen`.
 3. Add the function to `tools=[]` on every `LlmAgent` that needs it.
 
 ### Running locally
@@ -329,6 +329,46 @@ cd web && npm install && npm run dev   # web companion
 ---
 
 ## 4. For DevOps
+
+### Deploying with Terraform (recommended)
+
+All GCP infrastructure — Cloud Run, Cloud Functions, Firestore, Cloud Scheduler, Secret Manager, and Budget Alerts — is provisioned by the `terraform/` module. This is the recommended path for a fresh deployment.
+
+```bash
+# 1. Build and push the container image first
+gcloud builds submit --tag gcr.io/PROJECT_ID/deutsch-adk-coach
+
+# 2. Configure Terraform variables
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+# Edit terraform.tfvars with your project_id, API keys, bot_image, etc.
+
+# 3. Initialise and apply
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+`terraform apply` provisions everything in the correct order and outputs the bot URL and Cloud Function URL. Copy the Cloud Function URL into `web/.env.local` as `VITE_TOKEN_ENDPOINT`, then deploy the web companion separately.
+
+Firebase Hosting is intentionally outside Terraform. Hosting deploys are a static file upload, not a long-lived resource — Terraform cannot build or upload the `web/dist/` artifacts itself, so you would still need to run `firebase deploy` regardless. Adding a Terraform resource for it creates config without removing the manual step.
+
+```bash
+cd web && npm run build && firebase deploy --only hosting
+```
+
+To update the bot after a code change:
+
+```bash
+gcloud builds submit --tag gcr.io/PROJECT_ID/deutsch-adk-coach
+terraform apply   # updates the Cloud Run revision to the new image
+```
+
+---
+
+### Manual deployment (alternative)
+
+Use this if you prefer `gcloud` commands over Terraform.
 
 ### Prerequisites
 

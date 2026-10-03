@@ -29,7 +29,7 @@ Earlier versions of this coach lived as prompt skills for Claude Code or Roo Cod
 
 ---
 
-## What it does today (v3.0)
+## What it does today (v4.0.0)
 
 **Telegram bot — 8 commands, 8 specialized agents:**
 
@@ -43,6 +43,7 @@ Earlier versions of this coach lived as prompt skills for Claude Code or Roo Cod
 | `/pruefung` | `ExamPrepAgent` | telc B2 mock: Schreiben /45, Sprechen Teil 1/2+3, Trap Drill — practice-only, no save |
 | `/lektuere` | `LektureAgent` | Fetches real German article (tagesschau/Spiegel/Heise/Handelsblatt), pre-teaches 5 words, 6 comprehension question types |
 | `/hoeren` | `HoerenAgent` | Fetches DW/Easy German episode, pre-teaches 3 words, comprehension + sentence-by-sentence translation |
+| `/finish` | *(active agent)* | Ends the current session, saves vocabulary and mistakes, shows session summary |
 
 **Web companion (`web/`):**
 
@@ -64,7 +65,7 @@ Your voice note is downloaded from Telegram's servers, sent to the Gemini API fo
 
 1. Set your environment variables — copy `.env.example` to `.env` and fill in `GEMINI_API_KEY` and `TELEGRAM_BOT_TOKEN`
 2. Install dependencies: `pip install -r requirements.txt`
-3. Test the agent locally without Telegram: `python test_agent_cli.py`
+3. Run the test suite: `pytest`
 4. Run the bot: `python -m src.main`
 
 → Full setup and deployment: [Guide → For Developers](docs/guide.md#3-for-developers)
@@ -85,7 +86,7 @@ Your voice note is downloaded from Telegram's servers, sent to the Gemini API fo
 
 **Backend:** Python 3.11 · Google ADK 2.11.0 · Gemini 2.5 Flash · python-telegram-bot · Cloud Firestore · Cloud Run · Cloud Scheduler · Google Custom Search API
 
-**Web:** Vite 6 · React 18 · TypeScript · Firebase SDK · Gemini Live API (WebSocket) · AudioWorklet · Cloud Functions (Python)
+**Web:** Vite 8 · React 19 · TypeScript · Firebase SDK · Gemini Live API (WebSocket) · AudioWorklet · Cloud Functions (Python)
 
 ---
 
