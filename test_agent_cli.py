@@ -7,11 +7,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config
-from src.agents.conversation import conversation_agent
-from src.agents.vocab_recall import vocab_recall_agent
-from src.main import APP_NAME, conversation_runner, vocab_runner, session_service
+from src.main import APP_NAME, conversation_runner, quiz_runner, vocab_runner, session_service
 
-RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner}
+RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}
 
 USER_ID = "cli_tester"
 
@@ -40,6 +38,7 @@ def main():
     print("  Deutsch B2 ADK Coach — Local CLI Test Runner  ")
     print("=" * 52)
     print("Commands: /vocab  switch to vocab drill")
+    print("          /quiz   switch to adaptive quiz")
     print("          /start  reset conversation session")
     print("          exit    quit")
     print()
@@ -75,6 +74,12 @@ def main():
                 session_id = new_session_id(mode)
                 print(f"[+] Switched to vocab drill | Session: {session_id}")
                 user_input = "Start the vocabulary recall drill now."
+
+            elif user_input == "/quiz":
+                mode = "quiz"
+                session_id = new_session_id(mode)
+                print(f"[+] Switched to adaptive quiz | Session: {session_id}")
+                user_input = "Start the adaptive quiz now."
 
             print("\n[Thinking...]\n")
             reply = asyncio.run(run_turn(mode, session_id, user_input))
