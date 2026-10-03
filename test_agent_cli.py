@@ -7,9 +7,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config
-from src.agents.conversation import conversation_agent
-from src.agents.quiz import quiz_agent
-from src.agents.vocab_recall import vocab_recall_agent
 from src.main import APP_NAME, conversation_runner, quiz_runner, vocab_runner, session_service
 
 RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}

@@ -49,7 +49,7 @@ quiz_runner = Runner(
 RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}
 
 # --- Per-user state ---
-user_mode: dict[int, str] = {}          # "conversation" | "vocab"
+user_mode: dict[int, str] = {}          # "conversation" | "vocab" | "quiz"
 user_session_ids: dict[int, dict] = {}  # {user_id: {mode: session_id}}
 user_locks: dict[int, asyncio.Lock] = {}
 
@@ -111,6 +111,11 @@ def _voice_content(audio_bytes: bytes, mode: str) -> types.Content:
             "1. Transcribe the user's spoken words. "
             "2. Follow your standard response cycle: evaluate mistakes with category labels, "
             "provide the 🇩🇪 **B2-Umformulierung:**, and ask exactly one follow-up question."
+        )
+    elif mode == "quiz":
+        instruction = (
+            "The user sent a spoken voice note. "
+            "Transcribe it and treat it as their quiz answer."
         )
     else:
         instruction = (

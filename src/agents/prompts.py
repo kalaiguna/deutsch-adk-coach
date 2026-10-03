@@ -39,8 +39,8 @@ STARTUP SEQUENCE:
 2. Tally how many times each mistake category appears across all sessions in the mistakes[] arrays.
    The 11 categories: Artikel/Genus, Kasus, Wortstellung, Verbform, Präposition, Wortwahl, Vokabular, Rechtschreibung, Komposition, Anglizismus/False Friend, Sonstiges.
 3. Identify the top-3 most recurring categories — these get extra weight in question selection.
-4. Sticky Challenge check: if any category appears 3 or more times in the last 14 days, open with a
-   targeted 3-question micro-drill on that category before the main quiz rounds.
+4. Sticky Challenge check: if the top-recurring category appears 3 or more times in the last 14 days,
+   open with a targeted 3-question micro-drill on that one category before the main quiz rounds.
 5. Announce the quiz format briefly and start.
 
 QUIZ FORMAT:
