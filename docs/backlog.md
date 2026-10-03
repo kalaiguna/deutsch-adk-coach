@@ -27,7 +27,7 @@
 
 ---
 
-## v1.1.0 — Cross-session memory + vocab recall
+## v1.1.0 — Cross-session memory + vocab recall ✅
 
 - `read_recent_sessions(user_id, days)` in `firestore_tool.py` — unlocks all downstream history features
 - `vocab_review_misses: string[]` field added to `session_schema.json`
@@ -36,7 +36,7 @@
 
 ---
 
-## v1.2.0 — Adaptive quiz
+## v1.2.0 — Adaptive quiz ✅
 
 - `QuizAgent`: game-show format, 4–5 rounds, one question per turn
 - **Fehler-Rewind**: reads all past `mistakes[]` from Firestore, tallies category recurrence across sessions, weights questions toward persistent errors
@@ -46,7 +46,7 @@
 
 ---
 
-## v1.3.0 — Grammar deep-dive + monthly report
+## v1.3.0 — Grammar deep-dive + monthly report ✅
 
 - `MonatsrueckblickAgent`: aggregates all Firestore sessions from past 30 days; outputs mistake category tallies, vocab growth curve, session counts by type, reuse rate, and 3 focus areas for next month; saves `type="review"` with `date=YYYY-MM-01`
 - `GrammarAgent`: 12-topic monthly rotation (Konjunktiv II, Passiv, Relativsätze, Genitiv, Infinitivkonstruktionen, Modalpartikeln, Wortbildung, Adjektivdeklination, Indirekte Rede, Temporalangaben, Präpositionen mit Kasus, Satzverbindungen); reads Monatsrückblick to align topic with weakest category; 3 exercise types per session (fill-blank, transformation, free production)
@@ -55,7 +55,7 @@
 
 ---
 
-## v1.4.0 — Exam preparation
+## v1.4.0 — Exam preparation ✅
 
 - `ExamPrepAgent`: on-demand via `/pruefung`; four selectable components:
   - **Schreiben**: official telc /45 rubric (Inhalt 15, Aufbau 10, Grammatik 10, Wortschatz 10)
@@ -67,7 +67,7 @@
 
 ---
 
-## v2.0.0 — Real-world input (reading + listening)
+## v2.0.0 — Real-world input (reading + listening) ✅
 
 **Requires:** Google Custom Search API key + `web_search_tool.py` + `web_fetch_tool.py`
 
@@ -78,7 +78,7 @@
 
 ---
 
-## v3.0.0 — Web companion (dashboard + real-time voice calls)
+## v3.0.0 — Web companion (dashboard + real-time voice calls) ✅
 
 Inspired by Duolingo Max's "Call with Lily". Telegram stays for async/mobile use; the web app adds a progress dashboard and a "call your coach" mode for desktop sessions.
 
