@@ -15,6 +15,8 @@ from telegram.ext import (
 )
 from src import config
 from src.agents.conversation import conversation_agent
+from src.agents.grammar import grammar_agent
+from src.agents.monthly_report import monthly_report_agent
 from src.agents.quiz import quiz_agent
 from src.agents.vocab_recall import vocab_recall_agent
 
@@ -45,11 +47,29 @@ quiz_runner = Runner(
     app_name=APP_NAME,
     auto_create_session=True,
 )
+grammar_runner = Runner(
+    agent=grammar_agent,
+    session_service=session_service,
+    app_name=APP_NAME,
+    auto_create_session=True,
+)
+monthly_report_runner = Runner(
+    agent=monthly_report_agent,
+    session_service=session_service,
+    app_name=APP_NAME,
+    auto_create_session=True,
+)
 
-RUNNERS = {"conversation": conversation_runner, "vocab": vocab_runner, "quiz": quiz_runner}
+RUNNERS = {
+    "conversation": conversation_runner,
+    "vocab": vocab_runner,
+    "quiz": quiz_runner,
+    "grammar": grammar_runner,
+    "report": monthly_report_runner,
+}
 
 # --- Per-user state ---
-user_mode: dict[int, str] = {}          # "conversation" | "vocab" | "quiz"
+user_mode: dict[int, str] = {}          # "conversation" | "vocab" | "quiz" | "grammar" | "report"
 user_session_ids: dict[int, dict] = {}  # {user_id: {mode: session_id}}
 user_locks: dict[int, asyncio.Lock] = {}
 
@@ -117,6 +137,11 @@ def _voice_content(audio_bytes: bytes, mode: str) -> types.Content:
             "The user sent a spoken voice note. "
             "Transcribe it and treat it as their quiz answer."
         )
+    elif mode == "grammar":
+        instruction = (
+            "The user sent a spoken voice note. "
+            "Transcribe it and treat it as their grammar exercise answer."
+        )
     else:
         instruction = (
             "The user sent a spoken voice note. "
@@ -143,7 +168,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💡 *You can type in German or send voice notes anytime!*\n\n"
         "🇩🇪 **Worüber möchtest du heute sprechen?**\n\n"
         "🇬🇧 What would you like to talk about today?\n\n"
-        "Commands: /vocab — vocabulary drill | /quiz — adaptive quiz"
+        "Commands: /vocab — vocab drill | /quiz — adaptive quiz | /grammatik — grammar session | /bericht — monthly report"
     )
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
@@ -196,6 +221,54 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🎯 Starting your adaptive quiz...")
 
 
+async def grammatik_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not is_authorized(user_id):
+        return
+
+    user_mode[user_id] = "grammar"
+    session_id = reset_session_id(user_id, "grammar")
+
+    content = types.Content(
+        role="user",
+        parts=[types.Part(text="Start the grammar session for this month's topic now.")],
+    )
+
+    lock = get_or_create_lock(user_id)
+    async with lock:
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        reply = await run_agent(grammar_runner, user_id, session_id, content)
+
+    if reply:
+        await update.message.reply_text(reply)
+    else:
+        await update.message.reply_text("🇩🇪 Starten wir die Grammatikstunde!\n\n🇬🇧 Starting your grammar session...")
+
+
+async def bericht_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not is_authorized(user_id):
+        return
+
+    user_mode[user_id] = "report"
+    session_id = reset_session_id(user_id, "report")
+
+    content = types.Content(
+        role="user",
+        parts=[types.Part(text="Generate my monthly Monatsrückblick report now.")],
+    )
+
+    lock = get_or_create_lock(user_id)
+    async with lock:
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        reply = await run_agent(monthly_report_runner, user_id, session_id, content)
+
+    if reply:
+        await update.message.reply_text(reply)
+    else:
+        await update.message.reply_text("📊 Generating your monthly report...")
+
+
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not is_authorized(user_id):
@@ -244,6 +317,8 @@ def main():
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("vocab", vocab_command))
     app.add_handler(CommandHandler("quiz", quiz_command))
+    app.add_handler(CommandHandler("grammatik", grammatik_command))
+    app.add_handler(CommandHandler("bericht", bericht_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
