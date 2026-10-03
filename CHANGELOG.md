@@ -6,42 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased]
+## [3.0.0] — 2026-10-03
 
-### Planned — v1.1.0
-- `read_recent_sessions(user_id, days)` in `firestore_tool.py`
-- `vocab_review_misses: string[]` field in `session_schema.json`
-- `VocabRecallAgent` — SRS-style drill from recent session misses
+### Added
+- Vite 6 + React 18 + TypeScript web companion (`web/`)
+- `ActivityHeatmap` component — GitHub-style calendar heatmap of session activity
+- `VocabExplorer` component — searchable, sortable vocabulary table with gender-drill modal for nouns
+- `SessionLog` component — session list with drill-down into mistakes and vocabulary
+- `GespraechPanel` component — real-time voice call via Gemini Live API over WebSocket; 16kHz PCM mic input via AudioWorklet, 24kHz PCM playback
+- `useSessions` Firestore hook — live query with server-side date filter (`where("date", ">=", cutoff)`)
+- `functions/token_endpoint.py` — Cloud Function (`POST /token`) returning `{token, model}`; keeps Gemini API key out of the browser
+
+### Technical
+- Two separate `AudioContext` refs (`micCtxRef` 16kHz, `outCtxRef` 24kHz) — avoids mid-call orphan when switching contexts
+- `worklet.port.onmessage` wired before WebSocket opens — prevents mic audio drop at call start
+- Functional `setStatus` updater in `ws.onclose` — fixes stale closure where status read "connecting" at fire time
+
+---
+
+## [2.0.0] — 2026-10-03
+
+### Added
+- `LektureAgent` — searches for a real German news article (tagesschau, Spiegel, Heise, Handelsblatt); pre-teaches 5 vocabulary items; 6 comprehension question types (skimming, scanning, inference, vocab-in-context, opinion, summary); saves `type="reading"` with `source_url`
+- `HoerenAgent` — finds a DW or Easy German episode; pre-teaches 3 transcript words; comprehension questions + sentence-by-sentence translation with B2-Umformulierung; saves `type="listening"`
+- `web_search_tool.py` — Google Custom Search API wrapper; domain allowlist split by `source_type` (reading vs listening)
+- `web_fetch_tool.py` — HTML fetch, script/style strip, entity decode, 6000-char truncation; SSRF protection via `_ALLOWED_DOMAINS` hostname check before any HTTP request
+- `/lektuere` Telegram command + fortnightly Wednesday cron
+- `/hoeren` Telegram command + Sunday cron
+- `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_CX` env vars in `src/config.py`
+
+---
+
+## [1.4.0] — 2026-10-03
+
+### Added
+- `ExamPrepAgent` — on-demand telc B2 mock exam with four selectable components: Schreiben (official /45 rubric: Inhalt 15, Aufbau 10, Grammatik 10, Wortschatz 10), Sprechen Teil 1 (5-step monologue scaffold), Sprechen Teil 2+3 (partner discussion with Konjunktiv I), Trap Drill (5 MC question types that frequently catch candidates)
+- `/pruefung` Telegram command — practice only, no session save
+
+---
+
+## [1.3.0] — 2026-10-03
+
+### Added
+- `MonatsrueckblickAgent` — aggregates all sessions from the past 30 days; tallies 11 mistake categories; outputs vocab growth, session counts by type, reuse rate, and 3 focus areas for next month; saves `type="review"` with `date=YYYY-MM-01`
+- `GrammarAgent` — 12-topic monthly rotation (Konjunktiv II, Passiv, Relativsätze, Genitiv, Infinitivkonstruktionen, Modalpartikeln, Wortbildung, Adjektivdeklination, Indirekte Rede, Temporalangaben, Präpositionen mit Kasus, Satzverbindungen); reads most recent Monatsrückblick to align topic with weakest category; 3 exercise types per session (Lückentext, Umformung, Freie Sätze)
+- `/bericht` Telegram command + 1st-of-month 08:00 Berlin cron
+- `/grammatik` Telegram command + 10th-of-month 09:00 Berlin cron
+
+---
+
+## [1.2.0] — 2026-10-03
+
+### Added
+- `QuizAgent` — game-show format, 4–5 rounds, one question per turn
+- Fehler-Rewind: reads all past `mistakes[]` from Firestore, tallies category recurrence across sessions, weights questions toward persistent errors
+- Sticky Challenge: if any mistake category appears 3+ times in the last 14 days, opens with a targeted 3-question micro-drill for that category
+- `/quiz` Telegram command + Friday 09:00 Berlin cron
+
+---
+
+## [1.1.0] — 2026-10-02
+
+### Added
+- `read_recent_sessions(user_id, days)` in `firestore_tool.py` — queries Firestore (or local JSON) for sessions within a rolling date window; shared by all downstream agents
+- `vocab_review_misses: string[]` field added to `session_schema.json`
+- `VocabRecallAgent` — reads `vocab_review_misses` from last 14 days across all session types; SRS-style noun-article + verb-infinitive drill; up to 12 words per session
 - `/vocab` Telegram command
-
-### Planned — v1.2.0
-- `QuizAgent` with Fehler-Rewind (mistake-weighted questions) and Sticky Challenge (3-question micro-drill for recurring errors)
-- `/quiz` Telegram command + Friday 09:00 Berlin Cloud Scheduler cron
-
-### Planned — v1.3.0
-- `MonatsrueckblickAgent` — monthly Firestore aggregation, 3 focus areas output
-- `GrammarAgent` — 12-topic monthly rotation, reads Monatsrückblick for topic selection
-- `/bericht` command + 1st-of-month cron
-- `/grammatik` command + 10th-of-month cron
-
-### Planned — v1.4.0
-- `ExamPrepAgent` — mock telc B2 with /45 Schreiben rubric, Sprechen scaffolds, Trap Drill
-- `/pruefung` command (on-demand, no cron)
-
-### Planned — v2.0.0
-- `LektureAgent` — real German article fetch + 6 comprehension question types
-- `HoerenAgent` — DW/Easy German episode fetch + translation paragraph
-- `web_search_tool`, `web_fetch_tool` — Google Custom Search API integration
-- `/lektuere` command + fortnightly Wednesday cron
-- `/hoeren` command + Sunday cron
-
-### Planned — v3.0.0
-- Migrate lernpaket dashboard to Vite + React + TypeScript; replace static snapshot with live Firestore SDK reads
-- Port existing panels: KPI tiles, activity heatmap, vocab explorer, session log, B2 cheatsheet
-- Add `Gespräch` panel: mic → AudioWorklet → 16kHz PCM → WebSocket → Gemini Live API; real-time transcript + mistake ticker
-- Fehler-Rewind carried into live call from Firestore history; adaptive pacing; spoken B2-Umformulierung
-- End-of-call summary; session saved to Firestore (same schema as Telegram)
-- Cloud Functions ephemeral token endpoint (keeps API key server-side)
+- Migrated from `google-genai` SDK to Google ADK 2.11.0 — `LlmAgent`, `Runner`, `InMemorySessionService`; `RUNNERS` dict in `src/main.py` replaces manual session routing
+- Firestore document ID extended to `{YYYY-MM-DD}_{type}` — prevents same-day overwrite when multiple session types occur on the same date
 
 ---
 
